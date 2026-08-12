@@ -1,0 +1,11 @@
+{
+  "name": "psi",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "vercel dev"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.38.2"
+  }
+}
