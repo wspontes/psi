@@ -19,8 +19,12 @@ module.exports = async function handler(req, res) {
     }
     try {
       const redis = Redis.fromEnv();
-      const value = await redis.get(key);
-      return send(res, 200, { value: value == null ? null : String(value) });
+      const raw = await redis.get(key);
+      let value = null;
+      if (raw != null) {
+        value = typeof raw === 'string' ? raw : JSON.stringify(raw);
+      }
+      return send(res, 200, { value });
     } catch (e) {
       return send(res, 500, { error: 'storage unavailable' });
     }
