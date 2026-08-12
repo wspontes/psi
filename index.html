@@ -5,7 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title id="pageTitle">Nome da Profissional · Psicóloga Clínica</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Karla:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link id="dynamicFonts" href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Karla:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
     --ink:#212b21;
@@ -59,7 +60,8 @@
   /* ---------- Header ---------- */
   header.site-header{
     position:sticky; top:0; z-index:40;
-    background:rgba(245,241,230,0.92);
+    background: var(--ivory);
+    background: color-mix(in srgb, var(--ivory) 92%, transparent);
     backdrop-filter: blur(6px);
     border-bottom:1px solid var(--line);
   }
@@ -376,6 +378,29 @@
   .icon-btn:hover{ border-color:var(--brass); color:var(--brass-dark); }
   .msg-empty{ color:var(--sage); font-size:14px; padding:20px 0; }
   .loading-note{ font-size:13px; color:var(--sage); padding:10px 0; }
+
+  /* ---------- Admin: aparência ---------- */
+  .choice-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+  @media (max-width:760px){ .choice-grid{ grid-template-columns:1fr; } }
+  .choice-card{
+    border:1px solid var(--line-strong); background:var(--panel); padding:16px;
+    cursor:pointer; display:flex; flex-direction:column; gap:12px; text-align:left;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .choice-card:hover{ border-color:var(--brass); }
+  .choice-card.active{ border-color:var(--brass); box-shadow:0 0 0 1px var(--brass); }
+  .choice-card .c-label{ font-family:var(--font-display); font-size:15.5px; }
+  .theme-swatches{ display:flex; gap:6px; }
+  .theme-swatches span{
+    width:30px; height:30px; border-radius:50%;
+    border:1px solid rgba(0,0,0,.18); box-shadow: inset 0 0 0 1px rgba(255,255,255,.25);
+  }
+  .font-preview{ font-size:18px; line-height:1.25; }
+  .font-preview small{
+    font-family:var(--font-body); font-size:10.5px; letter-spacing:1.2px; text-transform:uppercase;
+    color:var(--sage); display:block; margin-bottom:6px;
+  }
+  .settings-note{ font-size:13px; color:var(--sage); margin:0 0 26px; max-width:560px; }
 </style>
 </head>
 <body>
@@ -631,6 +656,7 @@
     <div class="wrap admin-tabs">
       <button class="tab-btn active" data-tab="articles">Artigos</button>
       <button class="tab-btn" data-tab="messages">Mensagens</button>
+      <button class="tab-btn" data-tab="settings">Aparência</button>
     </div>
   </div>
   <div class="wrap admin-body">
@@ -674,6 +700,24 @@
       <h4 style="font-family:var(--font-display); font-size:17px; margin:0 0 14px;">Solicitações de contato</h4>
       <div class="admin-list" id="adminMessageList"></div>
     </div>
+    <div id="tabSettings" style="display:none;">
+      <h4 style="font-family:var(--font-display); font-size:17px; margin:0 0 4px;">Personalização da página</h4>
+      <p class="settings-note">Escolha o tema e a fonte da página. As alterações ficam salvas e são aplicadas para todos os visitantes.</p>
+      <div style="margin-bottom:26px;">
+        <div class="field" style="margin-bottom:12px;">
+          <label>Tema</label>
+        </div>
+        <div class="choice-grid" id="themeGrid"></div>
+      </div>
+      <div style="margin-bottom:26px;">
+        <div class="field" style="margin-bottom:12px;">
+          <label>Fonte</label>
+        </div>
+        <div class="choice-grid" id="fontGrid"></div>
+      </div>
+      <button class="btn btn-primary" id="saveSettingsBtn" type="button">Salvar aparência</button>
+      <div class="form-msg" id="settingsMsg"></div>
+    </div>
   </div>
 </div>
 
@@ -685,7 +729,8 @@
   if(!window.storage || typeof window.storage.set !== 'function'){
     const REMOTE_KEYS = {
       'site:articles': 'articles',
-      'site:messages': 'messages'
+      'site:messages': 'messages',
+      'site:settings': 'settings'
     };
     function lsGet(key){
       try{
@@ -755,6 +800,98 @@
 
   const ARTICLES_KEY = "site:articles";
   const MESSAGES_KEY = "site:messages";
+  const SETTINGS_KEY = "site:settings";
+
+  // ---------- temas e fontes (personalização da página) ----------
+  const THEMES = {
+    olive: {
+      label: 'Olivácea',
+      swatches: ['#f5f1e6', '#212b21', '#a8823f', '#727f64'],
+      vars: {
+        '--ink': '#212b21', '--ink-soft': '#4a5548',
+        '--ivory': '#f5f1e6', '--panel': '#ece4d1', '--panel-2': '#e2d8bf',
+        '--sage': '#727f64', '--brass': '#a8823f', '--brass-dark': '#7e5f2b'
+      }
+    },
+    rose: {
+      label: 'Rosé',
+      swatches: ['#faf3ee', '#3a2b27', '#c0663f', '#a9715c'],
+      vars: {
+        '--ink': '#3a2b27', '--ink-soft': '#6b5549',
+        '--ivory': '#faf3ee', '--panel': '#f2e2d6', '--panel-2': '#e9d3c3',
+        '--sage': '#a9715c', '--brass': '#c0663f', '--brass-dark': '#9a4a2a'
+      }
+    },
+    serene: {
+      label: 'Sereno',
+      swatches: ['#f2f5f7', '#23343f', '#4a7fb5', '#5a7d94'],
+      vars: {
+        '--ink': '#23343f', '--ink-soft': '#516573',
+        '--ivory': '#f2f5f7', '--panel': '#e2ebf0', '--panel-2': '#d6e2ea',
+        '--sage': '#5a7d94', '--brass': '#4a7fb5', '--brass-dark': '#35618c'
+      }
+    },
+    bosque: {
+      label: 'Bosque',
+      swatches: ['#f7f2e4', '#22301f', '#6b8f46', '#75815e'],
+      vars: {
+        '--ink': '#22301f', '--ink-soft': '#4f5f48',
+        '--ivory': '#f7f2e4', '--panel': '#eee5cf', '--panel-2': '#e4d7b8',
+        '--sage': '#75815e', '--brass': '#6b8f46', '--brass-dark': '#4f6c31'
+      }
+    }
+  };
+  const FONTS = {
+    classic: {
+      label: 'Fraunces & Karla',
+      display: "'Fraunces', serif",
+      body: "'Karla', sans-serif",
+      href: 'https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Karla:wght@300;400;500;600&display=swap'
+    },
+    lora: {
+      label: 'Lora & Source Sans 3',
+      display: "'Lora', serif",
+      body: "'Source Sans 3', sans-serif",
+      href: 'https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=Source+Sans+3:wght@300;400;500;600&display=swap'
+    },
+    playfair: {
+      label: 'Playfair Display & Poppins',
+      display: "'Playfair Display', serif",
+      body: "'Poppins', sans-serif",
+      href: 'https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Poppins:wght@300;400;500;600&display=swap'
+    },
+    serif: {
+      label: 'DM Serif Display & Inter',
+      display: "'DM Serif Display', serif",
+      body: "'Inter', sans-serif",
+      href: 'https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600&display=swap'
+    }
+  };
+  const DEFAULT_SETTINGS = { theme: 'olive', font: 'classic' };
+  let settings = { ...DEFAULT_SETTINGS };
+
+  function applySettings(){
+    const theme = THEMES[settings.theme] || THEMES.olive;
+    const font = FONTS[settings.font] || FONTS.classic;
+    const root = document.documentElement.style;
+    Object.entries(theme.vars).forEach(([k, v])=> root.setProperty(k, v));
+    root.setProperty('--font-display', font.display);
+    root.setProperty('--font-body', font.body);
+    const link = document.getElementById('dynamicFonts');
+    if(link && link.href !== font.href) link.href = font.href;
+  }
+
+  async function loadSettings(){
+    try{
+      const res = await window.storage.get(SETTINGS_KEY, true);
+      if(res && res.value){
+        const stored = JSON.parse(res.value);
+        if(stored && stored.theme && THEMES[stored.theme]) settings.theme = stored.theme;
+        if(stored && stored.font && FONTS[stored.font]) settings.font = stored.font;
+      }
+    }catch(e){ /* mantém o padrão */ }
+    applySettings();
+  }
 
   function getInitials(name){
     const parts = (name || "").trim().split(/\s+/).filter(Boolean);
@@ -937,14 +1074,57 @@
   });
 
   // ---------- admin tabs ----------
+  function showAdminTab(tab){
+    ['articles', 'messages', 'settings'].forEach(t=>{
+      const el = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
+      if(el) el.style.display = t === tab ? '' : 'none';
+    });
+    if(tab === 'settings') renderSettingsPanel();
+  }
   document.querySelectorAll('.tab-btn').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
       btn.classList.add('active');
-      const tab = btn.dataset.tab;
-      document.getElementById('tabArticles').style.display = tab === 'articles' ? '' : 'none';
-      document.getElementById('tabMessages').style.display = tab === 'messages' ? '' : 'none';
+      showAdminTab(btn.dataset.tab);
     });
+  });
+
+  // ---------- admin: aparência ----------
+  function renderSettingsPanel(){
+    const themeGrid = document.getElementById('themeGrid');
+    const fontGrid = document.getElementById('fontGrid');
+    themeGrid.innerHTML = Object.entries(THEMES).map(([key, t])=>`
+      <button type="button" class="choice-card ${key === settings.theme ? 'active' : ''}" data-theme="${key}">
+        <span class="c-label">${t.label}</span>
+        <span class="theme-swatches">${t.swatches.map(c=>`<span style="background:${c};"></span>`).join('')}</span>
+      </button>
+    `).join('');
+    fontGrid.innerHTML = Object.entries(FONTS).map(([key, f])=>`
+      <button type="button" class="choice-card ${key === settings.font ? 'active' : ''}" data-font="${key}">
+        <span class="font-preview"><small>${f.label}</small>Um espaço para ouvir</span>
+      </button>
+    `).join('');
+    themeGrid.querySelectorAll('[data-theme]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        settings.theme = btn.dataset.theme;
+        applySettings();
+        renderSettingsPanel();
+      });
+    });
+    fontGrid.querySelectorAll('[data-font]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        settings.font = btn.dataset.font;
+        applySettings();
+        renderSettingsPanel();
+      });
+    });
+  }
+  document.getElementById('saveSettingsBtn').addEventListener('click', async ()=>{
+    const msgEl = document.getElementById('settingsMsg');
+    msgEl.classList.remove('error');
+    msgEl.textContent = 'Salvando…';
+    await window.storage.set(SETTINGS_KEY, JSON.stringify(settings), true);
+    msgEl.textContent = 'Aparência salva e aplicada para todos.';
   });
 
   // ---------- admin: articles CRUD ----------
@@ -1162,6 +1342,7 @@
 
   // ---------- init ----------
   applyConfig();
+  loadSettings();
   loadArticles();
   initLgpdBanner();
 })();

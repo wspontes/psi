@@ -1,6 +1,6 @@
 const { Redis } = require('@upstash/redis');
 
-const ALLOWED_KEYS = ['articles', 'messages'];
+const ALLOWED_KEYS = ['articles', 'messages', 'settings'];
 const MAX_VALUE_BYTES = 500 * 1024;
 
 function send(res, status, body) {
